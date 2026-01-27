@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      width: 400px;
+      padding: 15px;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+    }
+    h3 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      color: #333;
+    }
+    h4 {
+      margin-top: 20px;
+      margin-bottom: 10px;
+      color: #555;
+      font-size: 13px;
+    }
+    label {
+      display: block;
+      margin: 10px 0;
+      cursor: pointer;
+    }
+    input[type="radio"] {
+      margin-right: 8px;
+    }
+    input[type="checkbox"] {
+      margin-right: 8px;
+    }
+    .section {
+      border-top: 1px solid #ddd;
+      padding-top: 15px;
+      margin-top: 15px;
+    }
+    .input-group {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    button {
+      padding: 8px 15px;
+      background: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    button:hover {
+      background: #357ae8;
+    }
+    button.secondary {
+      background: #5f6368;
+    }
+    button.secondary:hover {
+      background: #4a4d51;
+    }
+    button.danger {
+      background: #d93025;
+    }
+    button.danger:hover {
+      background: #c5221f;
+    }
+    button.warning {
+      background: #ff9900;
+    }
+    button.warning:hover {
+      background: #e68a00;
+    }
+    .trusted-list {
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 8px;
+      background: #f8f9fa;
+      margin-top: 10px;
+    }
+    .trusted-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 8px;
+      margin: 4px 0;
+      background: white;
+      border-radius: 3px;
+      font-size: 12px;
+    }
+    .trusted-item button {
+      padding: 4px 8px;
+      font-size: 11px;
+    }
+    .button-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .button-group button {
+      flex: 1;
+    }
+    .empty-state {
+      color: #999;
+      font-size: 12px;
+      text-align: center;
+      padding: 20px;
+    }
+    #fileInput {
+      display: none;
+    }
+    .hint {
+      font-size: 11px;
+      color: #666;
+      margin-top: 5px;
+    }
+    .warning-toggle {
+      background: #fff3cd;
+      border: 2px solid #ff9900;
+      border-radius: 6px;
+      padding: 12px;
+      margin-top: 15px;
+    }
+    .warning-toggle label {
+      margin: 0;
+      font-weight: 500;
+      color: #333;
+    }
+    .warning-toggle .hint {
+      margin-top: 8px;
+      color: #856404;
+    }
+  </style>
+</head>
+<body>
+  <h3>🔒 Email Click Protection</h3>
+  
+  <!-- Protection Mode Section -->
+  <div>
+    <h4>Protection Mode</h4>
+    <label>
+      <input type="radio" name="mode" value="popup" id="popup-mode">
+      Popup confirmation
+    </label>
+    <label>
+      <input type="radio" name="mode" value="deny" id="deny-mode">
+      Deny links (show URL only)
+    </label>
+  </div>
+  
+  <!-- Warning Banner Toggle -->
+  <div class="warning-toggle">
+    <label>
+      <input type="checkbox" id="showWarnings">
+      Show warning banners on non-trusted emails
+    </label>
+    <p class="hint">Display a prominent warning banner on all emails from senders not in your trusted list</p>
+  </div>
+  
+  <!-- Trusted Domains Section -->d
+  <div class="section">
+    <h4>Trusted Domains & Emails</h4>
+    <p class="hint">Add domains (e.g., amazon.com) or email addresses that you trust. Links from these sources will not be blocked.</p>
+    
+    <div class="input-group">
+      <input type="text" id="trustedInput" placeholder="example.com or user@domain.com">
+      <button id="addTrustedBtn">Add</button>
+    </div>
+    
+    <div id="trustedList" class="trusted-list">
+      <div class="empty-state">No trusted domains or emails yet</div>
+    </div>
+    
+    <div class="button-group">
+      <button id="exportBtn" class="secondary">Export List</button>
+      <button id="importBtn" class="secondary">Import List</button>
+    </div>
+    <input type="file" id="fileInput" accept=".json,.txt">
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
