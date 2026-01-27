@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Email Click Protection",
+  "name": "Email Phish Protection",
   "version": "1.3",
-  "description": "Protects against malicious links and forms in Email with trusted domain management",
+  "description": "Protects against malicious links and forms in Gmail with trusted domain management",
   "icons": {
     "16": "icon.png",
     "48": "icon.png",
@@ -19,5 +19,11 @@
   "action": {
     "default_popup": "popup.html",
     "default_icon": "icon.png"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "email-phish-protection@yourdomain.com",
+      "strict_min_version": "109.0"
+    }
   }
 }

@@ -1,23 +1,29 @@
 /**
- * Email Click Protection - Content Script
- * With Trusted Domains/Emails Whitelist and Warning Banners
+ * Email Phish Protection - Content Script
+ * Cross-browser compatible (Chrome & Firefox)
  */
+
+// Cross-browser API compatibility
+const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
 
 let protectionMode = 'popup';
 let trustedList = [];
 let showWarnings = false;
 let currentMessageId = null;
 
-// Initialize settings from Chrome storage
-chrome.storage.sync.get(['protectionMode', 'trustedList', 'showWarnings'], function(result) {
+// Initialize settings from storage
+browserAPI.storage.sync.get(['protectionMode', 'trustedList', 'showWarnings']).then(result => {
   protectionMode = result.protectionMode || 'popup';
   trustedList = result.trustedList || [];
   showWarnings = result.showWarnings !== undefined ? result.showWarnings : false;
   initializeProtection();
+}).catch(error => {
+  console.error('Email Phish Protection: Failed to load settings', error);
+  initializeProtection();
 });
 
-// Listen for settings changes from the popup
-chrome.storage.onChanged.addListener(function(changes) {
+// Listen for settings changes
+browserAPI.storage.onChanged.addListener((changes, namespace) => {
   if (changes.protectionMode || changes.trustedList || changes.showWarnings) {
     location.reload();
   }
@@ -47,50 +53,41 @@ function initializeProtection() {
 }
 
 function updateWarningBanner() {
-  // Get current message ID to detect when email changes
   const currentEmail = document.querySelector('[data-message-id]');
   if (!currentEmail) return;
   
   const messageId = currentEmail.getAttribute('data-message-id');
   
-  // Only update if message changed or banner doesn't exist
-  if (messageId === currentMessageId && document.querySelector('.email-protection-warning')) {
+  if (messageId === currentMessageId && document.querySelector('.email-phish-protection-warning')) {
     return;
   }
   
   currentMessageId = messageId;
   
-  // Remove old banner
-  const oldBanner = document.querySelector('.email-protection-warning');
+  const oldBanner = document.querySelector('.email-phish-protection-warning');
   if (oldBanner) {
     oldBanner.remove();
   }
   
-  // Show new banner
   showWarningBanner();
 }
 
 function showWarningBanner() {
-  // Find the email container
   const emailContainer = document.querySelector('[role="main"]');
   if (!emailContainer) return;
   
-  // Get sender email for THIS specific email
   const senderEmail = getSenderEmail();
   
-  // Check if sender is trusted
   if (senderEmail && isTrustedEmail(senderEmail)) {
-    return; // Don't show warning for trusted senders
+    return;
   }
   
-  // Also check if sender domain is trusted
   if (senderEmail && isSenderDomainTrusted(senderEmail)) {
     return;
   }
   
-  // Create warning banner
   const banner = document.createElement('div');
-  banner.className = 'email-protection-warning';
+  banner.className = 'email-phish-protection-warning';
   banner.innerHTML = `
     <div style="
       background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
@@ -122,10 +119,9 @@ function showWarningBanner() {
     </div>
   `;
   
-  // Add animation style if not already present
-  if (!document.getElementById('email-protection-styles')) {
+  if (!document.getElementById('email-phish-protection-styles')) {
     const style = document.createElement('style');
-    style.id = 'email-protection-styles';
+    style.id = 'email-phish-protection-styles';
     style.textContent = `
       @keyframes slideDown {
         from {
@@ -141,10 +137,8 @@ function showWarningBanner() {
     document.head.appendChild(style);
   }
   
-  // Insert banner at the top of the email body
   const emailBody = emailContainer.querySelector('[data-message-id]');
   if (emailBody) {
-    // Insert as first child of email body
     const insertPoint = emailBody.querySelector('.a3s, .ii') || emailBody.firstChild;
     if (insertPoint) {
       insertPoint.parentNode.insertBefore(banner, insertPoint);
@@ -163,7 +157,7 @@ function processLinks() {
     try {
       processLink(link);
     } catch (error) {
-      console.error("Email Click Protection failed to process a link:", error);
+      console.error("Email Phish Protection failed to process a link:", error);
       link.setAttribute('data-protected', 'error');
     }
   });
@@ -171,7 +165,7 @@ function processLinks() {
   try {
     processShadowDOM(emailBody);
   } catch (error) {
-    console.error("Email Click Protection failed to process Shadow DOM:", error);
+    console.error("Email Phish Protection failed to process Shadow DOM:", error);
   }
 }
 
@@ -185,7 +179,7 @@ function processShadowDOM(root) {
         try {
           processLink(link);
         } catch (error) {
-          console.error("Email Click Protection shadow link error:", error);
+          console.error("Email Phish Protection shadow link error:", error);
           link.setAttribute('data-protected', 'error');
         }
       });
@@ -204,7 +198,7 @@ function processForms() {
     try {
       processForm(form);
     } catch (error) {
-      console.error("Email Click Protection failed to process form:", error);
+      console.error("Email Phish Protection failed to process form:", error);
       form.setAttribute('data-protected', 'error');
     }
   });
@@ -217,7 +211,7 @@ function processForms() {
         try {
           processForm(form);
         } catch (error) {
-          console.error("Email Click Protection shadow form error:", error);
+          console.error("Email Phish Protection shadow form error:", error);
           form.setAttribute('data-protected', 'error');
         }
       });
@@ -230,15 +224,12 @@ function isTrusted(url, senderEmail) {
     const urlObj = new URL(url);
     const domain = urlObj.hostname.toLowerCase();
     
-    // Check if domain or any parent domain is trusted
     for (const trusted of trustedList) {
-      // Check if it's an email address
       if (trusted.includes('@')) {
         if (senderEmail && senderEmail.toLowerCase() === trusted) {
           return true;
         }
       } else {
-        // Check if domain matches
         if (domain === trusted || domain.endsWith('.' + trusted)) {
           return true;
         }
@@ -257,7 +248,6 @@ function isTrustedEmail(email) {
   
   for (const trusted of trustedList) {
     if (trusted.includes('@')) {
-      // Exact email match
       if (emailLower === trusted) {
         return true;
       }
@@ -276,7 +266,6 @@ function isSenderDomainTrusted(email) {
   
   for (const trusted of trustedList) {
     if (!trusted.includes('@')) {
-      // Domain match - check if email domain matches trusted domain
       if (domain === trusted || domain.endsWith('.' + trusted)) {
         return true;
       }
@@ -286,33 +275,26 @@ function isSenderDomainTrusted(email) {
 }
 
 function getSenderEmail() {
-  // Try multiple methods to extract sender email from the CURRENT email view
-  
-  // Method 1: Look in the currently visible email header
   const visibleEmail = document.querySelector('[data-message-id]');
   if (visibleEmail) {
-    // Look for email in the header area
     const headerEmail = visibleEmail.querySelector('.gD[email]');
     if (headerEmail) {
       return headerEmail.getAttribute('email');
     }
     
-    // Look for email in go areas
     const goElement = visibleEmail.querySelector('.go[email]');
     if (goElement) {
       return goElement.getAttribute('email');
     }
   }
   
-  // Method 2: Look for the currently expanded email header
   const expandedHeader = document.querySelector('.gE.iv.gt [email]');
   if (expandedHeader) {
     return expandedHeader.getAttribute('email');
   }
   
-  // Method 3: Try to find sender in the visible header
   const senderSpan = document.querySelector('span[email]');
-  if (senderSpan && senderSpan.offsetParent !== null) { // Check if visible
+  if (senderSpan && senderSpan.offsetParent !== null) {
     return senderSpan.getAttribute('email');
   }
   
@@ -322,7 +304,6 @@ function getSenderEmail() {
 function processLink(link) {
   const originalHref = link.href;
   
-  // Skip non-web links and internal Email navigation
   if (!originalHref || 
       originalHref.startsWith('mailto:') || 
       originalHref.startsWith('tel:') ||
@@ -332,11 +313,9 @@ function processLink(link) {
     return;
   }
   
-  // Check if URL is from trusted domain or sender
   const senderEmail = getSenderEmail();
   if (isTrusted(originalHref, senderEmail)) {
     link.setAttribute('data-protected', 'trusted');
-    // Add visual indicator for trusted links
     link.style.borderBottom = '2px solid #34a853';
     link.title = '✓ Trusted link - protection bypassed';
     return;
@@ -363,7 +342,6 @@ function processForm(form) {
     return;
   }
   
-  // Check if form action is trusted
   const senderEmail = getSenderEmail();
   if (isTrusted(formAction, senderEmail)) {
     form.setAttribute('data-protected', 'trusted');
@@ -472,8 +450,8 @@ function applyPopupMode(link, url) {
     }
     
     const confirmed = confirm(
-      `Email Click Protection:\n\n` +
-      `You are about to leave Email to visit:\n\n${url}` +
+      `Email Phish Protection:\n\n` +
+      `You are about to leave Gmail to visit:\n\n${url}` +
       warningText +
       `\n\nDo you want to continue?`
     );
@@ -493,7 +471,7 @@ function applyPopupModeForm(form, action) {
     e.stopImmediatePropagation();
     
     const confirmed = confirm(
-      `Email Click Protection:\n\n` +
+      `Email Phish Protection:\n\n` +
       `This form will submit data to:\n\n${action}\n\n` +
       `⚠️ WARNING: This will send form data to an external site!\n\n` +
       `Do you want to continue?`
