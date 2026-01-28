@@ -86,39 +86,77 @@ function showWarningBanner() {
     return;
   }
   
+  // Create banner using DOM methods instead of innerHTML
   const banner = document.createElement('div');
   banner.className = 'email-phish-protection-warning';
-  banner.innerHTML = `
-    <div style="
-      background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
-      border: 3px solid #d93025;
-      border-radius: 8px;
-      padding: 20px;
-      margin: 15px;
-      box-shadow: 0 4px 12px rgba(217, 48, 37, 0.3);
-      position: relative;
-      z-index: 1000;
-      animation: slideDown 0.5s ease-out;
-    ">
-      <div style="display: flex; align-items: center; gap: 15px;">
-        <div style="font-size: 48px;">⚠️</div>
-        <div style="flex: 1;">
-          <div style="font-size: 18px; font-weight: bold; color: white; margin-bottom: 8px;">
-            ⚠️ CAUTION: NON-TRUSTED SENDER
-          </div>
-          <div style="font-size: 14px; color: #fff; line-height: 1.5;">
-            This email is from <strong>${senderEmail || 'an unknown sender'}</strong>, which is not in your trusted list.
-            <br>
-            <strong>Exercise extreme caution</strong> before clicking any links or downloading attachments.
-          </div>
-          <div style="font-size: 12px; color: #ffe6e6; margin-top: 10px; font-style: italic;">
-            💡 Tip: If you trust this sender, add them to your trusted list in the extension settings.
-          </div>
-        </div>
-      </div>
-    </div>
+  
+  const outerDiv = document.createElement('div');
+  outerDiv.style.cssText = `
+    background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
+    border: 3px solid #d93025;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 15px;
+    box-shadow: 0 4px 12px rgba(217, 48, 37, 0.3);
+    position: relative;
+    z-index: 1000;
+    animation: slideDown 0.5s ease-out;
   `;
   
+  const flexContainer = document.createElement('div');
+  flexContainer.style.cssText = 'display: flex; align-items: center; gap: 15px;';
+  
+  // Warning emoji
+  const emojiDiv = document.createElement('div');
+  emojiDiv.style.fontSize = '48px';
+  emojiDiv.textContent = '⚠️';
+  
+  // Text content container
+  const textContainer = document.createElement('div');
+  textContainer.style.flex = '1';
+  
+  // Title
+  const title = document.createElement('div');
+  title.style.cssText = 'font-size: 18px; font-weight: bold; color: white; margin-bottom: 8px;';
+  title.textContent = '⚠️ CAUTION: NON-TRUSTED SENDER';
+  
+  // Main message
+  const message = document.createElement('div');
+  message.style.cssText = 'font-size: 14px; color: #fff; line-height: 1.5;';
+  
+  const messagePart1 = document.createTextNode('This email is from ');
+  const senderStrong = document.createElement('strong');
+  senderStrong.textContent = senderEmail || 'an unknown sender';
+  const messagePart2 = document.createTextNode(', which is not in your trusted list.');
+  const lineBreak1 = document.createElement('br');
+  const cautionStrong = document.createElement('strong');
+  cautionStrong.textContent = 'Exercise extreme caution';
+  const messagePart3 = document.createTextNode(' before clicking any links or downloading attachments.');
+  
+  message.appendChild(messagePart1);
+  message.appendChild(senderStrong);
+  message.appendChild(messagePart2);
+  message.appendChild(lineBreak1);
+  message.appendChild(cautionStrong);
+  message.appendChild(messagePart3);
+  
+  // Tip
+  const tip = document.createElement('div');
+  tip.style.cssText = 'font-size: 12px; color: #ffe6e6; margin-top: 10px; font-style: italic;';
+  tip.textContent = '💡 Tip: If you trust this sender, add them to your trusted list in the extension settings.';
+  
+  // Assemble the banner
+  textContainer.appendChild(title);
+  textContainer.appendChild(message);
+  textContainer.appendChild(tip);
+  
+  flexContainer.appendChild(emojiDiv);
+  flexContainer.appendChild(textContainer);
+  
+  outerDiv.appendChild(flexContainer);
+  banner.appendChild(outerDiv);
+  
+  // Add animation style if not already present
   if (!document.getElementById('email-phish-protection-styles')) {
     const style = document.createElement('style');
     style.id = 'email-phish-protection-styles';
@@ -137,6 +175,7 @@ function showWarningBanner() {
     document.head.appendChild(style);
   }
   
+  // Insert banner
   const emailBody = emailContainer.querySelector('[data-message-id]');
   if (emailBody) {
     const insertPoint = emailBody.querySelector('.a3s, .ii') || emailBody.firstChild;
@@ -147,6 +186,7 @@ function showWarningBanner() {
     }
   }
 }
+
 
 function processLinks() {
   const emailBody = document.querySelector('[role="main"]');
